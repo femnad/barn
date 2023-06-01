@@ -3,11 +3,32 @@ package selection
 import (
 	"fmt"
 	"sort"
+
+	"github.com/femnad/barn/config"
 )
 
 type pair struct {
 	key   string
 	count int64
+}
+
+func accumulate(selector config.Selector) ([]string, error) {
+	var output []string
+
+	fn, err := getActionFn(selector.Action)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, arg := range selector.Args {
+		selections, fErr := fn(arg)
+		if fErr != nil {
+			return nil, fErr
+		}
+		output = append(output, selections...)
+	}
+
+	return output, nil
 }
 
 func Show(configFile, id string) error {
@@ -21,12 +42,7 @@ func Show(configFile, id string) error {
 		return err
 	}
 
-	fn, err := getActionFn(selector.Action)
-	if err != nil {
-		return err
-	}
-
-	selections, err := fn(selector.Arg)
+	selections, err := accumulate(selector)
 	if err != nil {
 		return err
 	}

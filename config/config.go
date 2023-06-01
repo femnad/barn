@@ -1,10 +1,10 @@
 package config
 
 type Selector struct {
-	Action   string `yaml:"action"`
-	Arg      string `yaml:"arg"`
-	Id       string `yaml:"id"`
-	OnSelect string `yaml:"on_select"`
+	Action   string   `yaml:"action"`
+	Args     []string `yaml:"args"`
+	Id       string   `yaml:"id"`
+	OnSelect string   `yaml:"on_select"`
 }
 
 type Options struct {

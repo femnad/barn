@@ -6,10 +6,11 @@ A small tool for running something which outputs a list, making a selection base
 
 If you have the following configuration:
 
-```
+```yaml
 selectors:
   - action: readdir
-    arg: ~/.local/share/venv
+    args:
+      - ~/.local/share/venv
     id: venv
     on_select: source {{ .Arg }}/{{ .Selection }}/bin/activate.fish
 ```
