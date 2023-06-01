@@ -12,7 +12,7 @@ selectors:
     args:
       - ~/.local/share/venv
     id: venv
-    on_select: source {{ .Arg }}/{{ .Selection }}/bin/activate.fish
+    on_select: source {{ .FullName }}/bin/activate.fish
 ```
 
 The only selector here is one with the id `venv`. When you run `barn` with no arguments, the contents of `~/.local/share/venv` will be printed. When an arguments is provided a `source` command based on the selection is printed. If you put that in a script, you can use `fzf` to activate Python `virtualenv`s which will be sorted according to their usage frequency:

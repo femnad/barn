@@ -2,34 +2,41 @@ package selection
 
 import (
 	"fmt"
-	"github.com/femnad/barn/config"
-	"github.com/femnad/mare"
-	"gopkg.in/yaml.v3"
 	"io"
 	"os"
+	"path"
+
+	"gopkg.in/yaml.v3"
+
+	"github.com/femnad/barn/entity"
+	"github.com/femnad/mare"
 )
 
 type choice struct {
-	config.Selector
+	entity.Entry
+	entity.Selector
 	Selection string
 }
 
-func readdir(arg string) ([]string, error) {
-	var out []string
+func readdir(arg string) ([]entity.Entry, error) {
+	var out []entity.Entry
 	arg = mare.ExpandUser(arg)
 	entries, err := os.ReadDir(arg)
 	if err != nil {
 		return out, err
 	}
 
-	for _, entry := range entries {
-		out = append(out, entry.Name())
+	for _, i := range entries {
+		name := i.Name()
+		fullPath := path.Join(arg, name)
+		e := entity.Entry{DisplayName: name, FullName: fullPath}
+		out = append(out, e)
 	}
 
 	return out, nil
 }
 
-func getActionFn(action string) (func(string) ([]string, error), error) {
+func getActionFn(action string) (func(string) ([]entity.Entry, error), error) {
 	switch action {
 	case "readdir":
 		return readdir, nil
@@ -38,8 +45,8 @@ func getActionFn(action string) (func(string) ([]string, error), error) {
 	}
 }
 
-func getConfig(file string) (config.Config, error) {
-	var cfg config.Config
+func getConfig(file string) (entity.Config, error) {
+	var cfg entity.Config
 
 	file = mare.ExpandUser(file)
 	f, err := os.Open(file)
@@ -61,7 +68,7 @@ func getConfig(file string) (config.Config, error) {
 	return cfg, nil
 }
 
-func getSelector(cfg config.Config, id string) (config.Selector, error) {
+func getSelector(cfg entity.Config, id string) (entity.Selector, error) {
 	for _, selector := range cfg.Selectors {
 		if selector.Id != id {
 			continue
@@ -70,5 +77,5 @@ func getSelector(cfg config.Config, id string) (config.Selector, error) {
 		return selector, nil
 	}
 
-	return config.Selector{}, fmt.Errorf("no selector defined for id %s", id)
+	return entity.Selector{}, fmt.Errorf("no selector defined for id %s", id)
 }

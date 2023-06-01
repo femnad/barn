@@ -19,12 +19,12 @@ func Mark(configFile, id, selection string) error {
 		return err
 	}
 
-	err = storeSelection(cfg, id, selection)
+	entry, err := incrementEntryCount(cfg, id, selection)
 	if err != nil {
 		return err
 	}
 
-	ch := choice{Selector: selector, Selection: selection}
+	ch := choice{Entry: entry, Selector: selector, Selection: selection}
 
 	tmpl, err := template.New("on-select").Parse(ch.OnSelect)
 	if err != nil {

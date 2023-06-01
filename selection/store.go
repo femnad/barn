@@ -1,26 +1,25 @@
 package selection
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"path"
-	"strconv"
 
 	bolt "go.etcd.io/bbolt"
 
-	"github.com/femnad/barn/config"
+	"github.com/femnad/barn/entity"
 	"github.com/femnad/mare"
 )
 
 const (
-	countBase     = 10
-	countBit      = 64
 	dbMode        = 0600
 	defaultDbPath = "~/.config/barn/barn.boltdb"
 )
 
-type selectionMap map[string]int64
+type selectionMap map[string]entity.Entry
 
-func getDb(cfg config.Config) (*bolt.DB, error) {
+func getDb(cfg entity.Config) (*bolt.DB, error) {
 	dbPath := cfg.Options.DatabasePath
 	if dbPath == "" {
 		dbPath = defaultDbPath
@@ -40,65 +39,120 @@ func getDb(cfg config.Config) (*bolt.DB, error) {
 	return db, nil
 }
 
-func storeSelection(cfg config.Config, id, selection string) error {
+func decodeEntry(b []byte) (entity.Entry, error) {
+	buffer := bytes.NewBuffer(b)
+	dec := gob.NewDecoder(buffer)
+
+	e := entity.Entry{}
+	err := dec.Decode(&e)
+	if err != nil {
+		return e, err
+	}
+
+	return e, err
+}
+
+func encodeEntry(entry entity.Entry) ([]byte, error) {
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	err := enc.Encode(entry)
+	return buffer.Bytes(), err
+}
+
+func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx) (entity.Entry, error) {
+	var err error
+	var bck *bolt.Bucket
+	var value entity.Entry
+	bucketName := []byte(bucket)
+	keyName := []byte(key)
+
+	bck = tx.Bucket(bucketName)
+	if bck == nil {
+		return value, fmt.Errorf("expected bucket %s to exists when incrementing entry for %s", bucket, key)
+	}
+
+	storedEntry := bck.Get(keyName)
+	if storedEntry == nil {
+		return value, fmt.Errorf("expected entry in bucket %s for %s to exists when incrementing", bucket, key)
+	}
+	value, err = decodeEntry(storedEntry)
+	if err != nil {
+		return value, err
+	}
+	value.Count = value.Count + 1
+
+	encoded, err := encodeEntry(value)
+	if err != nil {
+		return value, err
+	}
+
+	return value, bck.Put(keyName, encoded)
+}
+
+func incrementEntryCount(cfg entity.Config, id, key string) (entity.Entry, error) {
+	var value entity.Entry
 	db, err := getDb(cfg)
+	if err != nil {
+		return value, err
+	}
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		var uErr error
-		var count int64
-		var bucket *bolt.Bucket
-		bucketName := []byte(id)
-		key := []byte(selection)
-
-		bucket = tx.Bucket(bucketName)
-		if bucket == nil {
-			bucket, err = tx.CreateBucket(bucketName)
-			if err != nil {
-				return uErr
-			}
-		}
-
-		countByte := bucket.Get(key)
-		if countByte == nil {
-			count = 0
-		} else {
-			count, err = strconv.ParseInt(string(countByte), countBase, countBit)
-			if err != nil {
-				return err
-			}
-		}
-
-		countNew := strconv.FormatInt(count+1, countBase)
-		return bucket.Put(key, []byte(countNew))
+		value, err = dbIncrementEntryCount(id, key, tx)
+		return err
 	})
-	return err
+	return value, err
 }
 
-func getSelectionMap(cfg config.Config, id string) (selectionMap, error) {
+func dbEnsureEntry(bucket, key string, entry entity.Entry, tx *bolt.Tx) (entity.Entry, error) {
+	var err error
+	var bck *bolt.Bucket
+	var value entity.Entry
+	bucketName := []byte(bucket)
+	keyName := []byte(key)
+
+	bck = tx.Bucket(bucketName)
+	if bck == nil {
+		bck, err = tx.CreateBucket(bucketName)
+		if err != nil {
+			return value, err
+		}
+	}
+
+	storedEntry := bck.Get(keyName)
+	if storedEntry == nil {
+		encoded, eErr := encodeEntry(entry)
+		if eErr != nil {
+			return value, eErr
+		}
+
+		eErr = bck.Put(keyName, encoded)
+		if eErr != nil {
+			return value, eErr
+		}
+
+		return entry, nil
+	}
+
+	return decodeEntry(storedEntry)
+}
+
+func getSelectionMap(cfg entity.Config, id string, entries []entity.Entry) (selectionMap, error) {
 	countMap := make(selectionMap)
-	bucketName := []byte(id)
 
 	db, err := getDb(cfg)
 	if err != nil {
 		return countMap, err
 	}
 
-	err = db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(bucketName)
-		if bucket == nil {
-			return nil
-		}
-
-		err = bucket.ForEach(func(k, v []byte) error {
-			key := string(k)
-			value, cErr := strconv.ParseInt(string(v), countBase, countBit)
-			if cErr != nil {
-				return cErr
+	err = db.Batch(func(tx *bolt.Tx) error {
+		for _, entry := range entries {
+			value, eErr := dbEnsureEntry(id, entry.DisplayName, entry, tx)
+			if eErr != nil {
+				return eErr
 			}
-			countMap[key] = value
-			return nil
-		})
+			countMap[value.DisplayName] = value
+		}
 		return nil
 	})
 

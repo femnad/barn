@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/femnad/barn/config"
+	"github.com/femnad/barn/entity"
 )
 
 type pair struct {
 	key   string
-	count int64
+	value entity.Entry
 }
 
-func accumulate(selector config.Selector) ([]string, error) {
-	var output []string
+func accumulate(selector entity.Selector) ([]entity.Entry, error) {
+	var output []entity.Entry
 
 	fn, err := getActionFn(selector.Action)
 	if err != nil {
@@ -47,34 +47,38 @@ func Show(configFile, id string) error {
 		return err
 	}
 
-	countMap, err := getSelectionMap(cfg, id)
+	storedEntries, err := getSelectionMap(cfg, id, selections)
 	if err != nil {
 		return err
 	}
 
 	for _, selection := range selections {
-		_, ok := countMap[selection]
+		_, ok := storedEntries[selection.FullName]
 		if !ok {
-			countMap[selection] = 0
+			storedEntries[selection.FullName] = entity.Entry{
+				DisplayName: selection.DisplayName,
+				FullName:    selection.FullName,
+				Count:       selection.Count,
+			}
 		}
 	}
 
 	var sorted []pair
-	for k, v := range countMap {
-		sorted = append(sorted, pair{key: k, count: v})
+	for k, v := range storedEntries {
+		sorted = append(sorted, pair{key: k, value: v})
 	}
 	// Reverse order as that's what fzf expects by default.
 	sort.Slice(sorted, func(i, j int) bool {
 		itemI := sorted[i]
 		itemJ := sorted[j]
-		if itemI.count == itemJ.count {
+		if itemI.value.Count == itemJ.value.Count {
 			return itemI.key > itemJ.key
 		}
-		return itemI.count > itemJ.count
+		return itemI.value.Count > itemJ.value.Count
 	})
 
 	for _, selection := range sorted {
-		fmt.Println(selection.key)
+		fmt.Println(selection.value.DisplayName)
 	}
 
 	return nil

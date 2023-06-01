@@ -1,4 +1,8 @@
-package config
+package entity
+
+type Options struct {
+	DatabasePath string `yaml:"db_path"`
+}
 
 type Selector struct {
 	Action   string   `yaml:"action"`
@@ -7,11 +11,7 @@ type Selector struct {
 	OnSelect string   `yaml:"on_select"`
 }
 
-type Options struct {
-	DatabasePath string `yaml:"db_path"`
-}
-
 type Config struct {
-	Selectors []Selector `yaml:"selectors"`
 	Options   Options    `yaml:"options"`
+	Selectors []Selector `yaml:"selectors"`
 }
