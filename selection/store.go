@@ -18,6 +18,7 @@ const (
 )
 
 type selectionMap map[string]entity.Entry
+type bucketEntries map[string]selectionMap
 
 func getDb(cfg entity.Config) (*bolt.DB, error) {
 	dbPath := cfg.Options.DatabasePath
@@ -157,4 +158,41 @@ func getSelectionMap(cfg entity.Config, id string, entries []entity.Entry) (sele
 	})
 
 	return countMap, err
+}
+
+func getStoredSelections(cfg entity.Config, id string) (bucketEntries, error) {
+	bucketMap := make(bucketEntries)
+
+	db, err := getDb(cfg)
+	if err != nil {
+		return bucketMap, err
+	}
+
+	err = db.View(func(tx *bolt.Tx) error {
+		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+			bucketName := string(name)
+			if id != "" && bucketName != id {
+				return nil
+			}
+
+			bucketSelections := make(selectionMap)
+
+			err = b.ForEach(func(k, v []byte) error {
+				entry, dErr := decodeEntry(v)
+				if dErr != nil {
+					return dErr
+				}
+				bucketSelections[string(k)] = entry
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+
+			bucketMap[bucketName] = bucketSelections
+			return nil
+		})
+	})
+
+	return bucketMap, err
 }

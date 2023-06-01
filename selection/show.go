@@ -2,15 +2,9 @@ package selection
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/femnad/barn/entity"
 )
-
-type pair struct {
-	key   string
-	value entity.Entry
-}
 
 func accumulate(selector entity.Selector) ([]entity.Entry, error) {
 	var output []entity.Entry
@@ -52,20 +46,7 @@ func Show(configFile, id string) error {
 		return err
 	}
 
-	var sorted []pair
-	for k, v := range storedEntries {
-		sorted = append(sorted, pair{key: k, value: v})
-	}
-	// Reverse order as that's what fzf expects by default.
-	sort.Slice(sorted, func(i, j int) bool {
-		itemI := sorted[i]
-		itemJ := sorted[j]
-		if itemI.value.Count == itemJ.value.Count {
-			return itemI.key > itemJ.key
-		}
-		return itemI.value.Count > itemJ.value.Count
-	})
-
+	sorted := sortEntries(storedEntries, true)
 	for _, selection := range sorted {
 		fmt.Println(selection.value.DisplayName)
 	}
