@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/alexflint/go-arg v1.4.3
-	github.com/femnad/mare v0.4.0
+	github.com/femnad/mare v0.5.2
 	go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gopkg.in/yaml.v3 v3.0.1

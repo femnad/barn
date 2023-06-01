@@ -9,7 +9,7 @@ If you have the following configuration:
 ```yaml
 selectors:
   - action: readdir
-    path:
+    target:
       - ~/.local/share/venv
     id: venv
     on_select: source {{ .FullName }}/bin/activate.fish
@@ -21,9 +21,9 @@ The only selector here is one with the id `venv`. When you run `barn` with no ar
 if test (count $argv) -eq 1
     set vst $argv[1]
 else
-    barn -i venv | fzf +s | read vst
+    barn select -i venv | fzf +s | read vst
     or return 1
 end
 
-eval (barn -i venv $vst)
+eval (barn select -i venv $vst)
 ```

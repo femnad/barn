@@ -43,17 +43,17 @@ func getDisplayName(entryName, targetPath string, includeParents int) string {
 	return name
 }
 
-func readdir(targetPath string, args entity.ActionArgs) ([]entity.Entry, error) {
+func readdir(target string, args entity.ActionSettings) ([]entity.Entry, error) {
 	var out []entity.Entry
-	targetPath = mare.ExpandUser(targetPath)
-	entries, err := os.ReadDir(targetPath)
+	target = mare.ExpandUser(target)
+	entries, err := os.ReadDir(target)
 	if err != nil {
 		return out, err
 	}
 
 	for _, i := range entries {
 		name := i.Name()
-		fullPath := path.Join(targetPath, name)
+		fullPath := path.Join(target, name)
 		displayName := getDisplayName(name, fullPath, args.IncludeParents)
 		e := entity.Entry{DisplayName: displayName, FullName: fullPath}
 		out = append(out, e)
@@ -62,10 +62,12 @@ func readdir(targetPath string, args entity.ActionArgs) ([]entity.Entry, error) 
 	return out, nil
 }
 
-func getActionFn(action string) (func(string, entity.ActionArgs) ([]entity.Entry, error), error) {
+func getActionFn(action string) (func(string, entity.ActionSettings) ([]entity.Entry, error), error) {
 	switch action {
 	case "readdir":
 		return readdir, nil
+	case "exec":
+		return execCmd, nil
 	default:
 		return nil, fmt.Errorf("no function found for %s", action)
 	}
