@@ -20,8 +20,8 @@ func accumulate(selector entity.Selector) ([]entity.Entry, error) {
 		return nil, err
 	}
 
-	for _, arg := range selector.Args {
-		selections, fErr := fn(arg)
+	for _, targetPath := range selector.Path {
+		selections, fErr := fn(targetPath, selector.Args)
 		if fErr != nil {
 			return nil, fErr
 		}

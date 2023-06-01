@@ -9,7 +9,7 @@ If you have the following configuration:
 ```yaml
 selectors:
   - action: readdir
-    args:
+    path:
       - ~/.local/share/venv
     id: venv
     on_select: source {{ .FullName }}/bin/activate.fish

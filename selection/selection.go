@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -18,25 +19,50 @@ type choice struct {
 	Selection string
 }
 
-func readdir(arg string) ([]entity.Entry, error) {
+func getDisplayName(entryName, targetPath string, includeParents int) string {
+	if includeParents <= 0 {
+		return entryName
+	}
+
+	parents := strings.Split(targetPath, "/")
+	parents = mare.Filter[string](parents, func(d string) bool {
+		return d != ""
+	})
+	numParents := len(parents)
+	startIndex := numParents - includeParents - 1
+	if startIndex < 0 {
+		return targetPath
+	}
+
+	prefix := parents[numParents-includeParents-1 : numParents]
+
+	name := strings.Join(prefix, "/")
+	if includeParents >= numParents-1 {
+		name = "/" + name
+	}
+	return name
+}
+
+func readdir(targetPath string, args entity.ActionArgs) ([]entity.Entry, error) {
 	var out []entity.Entry
-	arg = mare.ExpandUser(arg)
-	entries, err := os.ReadDir(arg)
+	targetPath = mare.ExpandUser(targetPath)
+	entries, err := os.ReadDir(targetPath)
 	if err != nil {
 		return out, err
 	}
 
 	for _, i := range entries {
 		name := i.Name()
-		fullPath := path.Join(arg, name)
-		e := entity.Entry{DisplayName: name, FullName: fullPath}
+		fullPath := path.Join(targetPath, name)
+		displayName := getDisplayName(name, fullPath, args.IncludeParents)
+		e := entity.Entry{DisplayName: displayName, FullName: fullPath}
 		out = append(out, e)
 	}
 
 	return out, nil
 }
 
-func getActionFn(action string) (func(string) ([]entity.Entry, error), error) {
+func getActionFn(action string) (func(string, entity.ActionArgs) ([]entity.Entry, error), error) {
 	switch action {
 	case "readdir":
 		return readdir, nil
