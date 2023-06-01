@@ -52,17 +52,6 @@ func Show(configFile, id string) error {
 		return err
 	}
 
-	for _, selection := range selections {
-		_, ok := storedEntries[selection.FullName]
-		if !ok {
-			storedEntries[selection.FullName] = entity.Entry{
-				DisplayName: selection.DisplayName,
-				FullName:    selection.FullName,
-				Count:       selection.Count,
-			}
-		}
-	}
-
 	var sorted []pair
 	for k, v := range storedEntries {
 		sorted = append(sorted, pair{key: k, value: v})
