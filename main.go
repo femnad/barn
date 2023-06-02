@@ -1,12 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/alexflint/go-arg"
 
 	"github.com/femnad/barn/selection"
+)
+
+const (
+	name    = "barn"
+	version = "0.1.0"
 )
 
 type commonArgs struct {
@@ -39,6 +45,10 @@ type args struct {
 	Output *outputCmd `arg:"subcommand:output" help:"Show stored entries for the given selection ID"`
 	Purge  *purgeCmd  `arg:"subcommand:purge" help:"Purge given bucket"`
 	Select *selectCmd `arg:"subcommand:select" help:"Select based on given choices and update counts"`
+}
+
+func (args) Version() string {
+	return fmt.Sprintf("%s %s", name, version)
 }
 
 func showSelections(config, id string) {
