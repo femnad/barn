@@ -60,7 +60,7 @@ func encodeEntry(entry entity.Entry) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
-func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx) (entity.Entry, error) {
+func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx, lazy bool) (entity.Entry, error) {
 	var err error
 	var bck *bolt.Bucket
 	var value entity.Entry
@@ -69,18 +69,30 @@ func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx) (entity.Entry, error
 
 	bck = tx.Bucket(bucketName)
 	if bck == nil {
-		return value, fmt.Errorf("expected bucket %s to exists when incrementing entry for %s", bucket, key)
+		if !lazy {
+			return value, fmt.Errorf("expected bucket %s to exists when incrementing entry for %s", bucket, key)
+		}
+		bck, err = tx.CreateBucket(bucketName)
+		if err != nil {
+			return value, err
+		}
 	}
 
 	storedEntry := bck.Get(keyName)
 	if storedEntry == nil {
-		return value, fmt.Errorf("expected entry in bucket %s for %s to exists when incrementing", bucket, key)
+		if !lazy {
+			return value, fmt.Errorf("expected entry in bucket %s for %s to exists when incrementing", bucket, key)
+		}
+		// If this is a lazy initialization this key wasn't set based on the initial selection output so we can only set
+		// display name and full name to the same value.
+		value = entity.Entry{DisplayName: key, FullName: key, Count: 1}
+	} else {
+		value, err = decodeEntry(storedEntry)
+		if err != nil {
+			return value, err
+		}
+		value.Count = value.Count + 1
 	}
-	value, err = decodeEntry(storedEntry)
-	if err != nil {
-		return value, err
-	}
-	value.Count = value.Count + 1
 
 	encoded, err := encodeEntry(value)
 	if err != nil {
@@ -90,7 +102,7 @@ func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx) (entity.Entry, error
 	return value, bck.Put(keyName, encoded)
 }
 
-func incrementEntryCount(cfg entity.Config, id, key string) (entity.Entry, error) {
+func incrementEntryCount(cfg entity.Config, id, key string, lazy bool) (entity.Entry, error) {
 	var value entity.Entry
 	db, err := getDb(cfg)
 	if err != nil {
@@ -99,7 +111,7 @@ func incrementEntryCount(cfg entity.Config, id, key string) (entity.Entry, error
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		value, err = dbIncrementEntryCount(id, key, tx)
+		value, err = dbIncrementEntryCount(id, key, tx, lazy)
 		return err
 	})
 	return value, err
@@ -160,6 +172,32 @@ func getSelectionMap(cfg entity.Config, bucket string, entries []entity.Entry) (
 	return countMap, err
 }
 
+// getLazySelectionMap doesn't initialize an database entry for each choice.
+func getLazySelectionMap(cfg entity.Config, bucket string) (selectionMap, error) {
+	countMap := make(selectionMap)
+
+	db, err := getDb(cfg)
+	if err != nil {
+		return countMap, err
+	}
+
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			return nil
+		}
+		return b.ForEach(func(k, v []byte) error {
+			entry, dErr := decodeEntry(v)
+			if dErr != nil {
+				return dErr
+			}
+			countMap[string(k)] = entry
+			return nil
+		})
+	})
+
+	return countMap, err
+}
 func getStoredSelections(cfg entity.Config, bucket string) (bucketEntries, error) {
 	bucketMap := make(bucketEntries)
 
