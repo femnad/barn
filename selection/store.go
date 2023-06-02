@@ -70,7 +70,7 @@ func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx, eager bool) (entity.
 	bck = tx.Bucket(bucketName)
 	if bck == nil {
 		if eager {
-			return value, fmt.Errorf("expected bucket %s to exists when incrementing entry for %s", bucket, key)
+			return value, fmt.Errorf("expected bucket %s to exist when incrementing entry for %s", bucket, key)
 		}
 		bck, err = tx.CreateBucket(bucketName)
 		if err != nil {
@@ -102,7 +102,7 @@ func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx, eager bool) (entity.
 	return value, bck.Put(keyName, encoded)
 }
 
-func incrementEntryCount(cfg entity.Config, id, key string, lazy bool) (entity.Entry, error) {
+func incrementEntryCount(cfg entity.Config, id, key string, eager bool) (entity.Entry, error) {
 	var value entity.Entry
 	db, err := getDb(cfg)
 	if err != nil {
@@ -111,7 +111,7 @@ func incrementEntryCount(cfg entity.Config, id, key string, lazy bool) (entity.E
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		value, err = dbIncrementEntryCount(id, key, tx, lazy)
+		value, err = dbIncrementEntryCount(id, key, tx, eager)
 		return err
 	})
 	return value, err
