@@ -196,3 +196,37 @@ func getStoredSelections(cfg entity.Config, id string) (bucketEntries, error) {
 
 	return bucketMap, err
 }
+
+func purgeBucket(cfg entity.Config, bucket string) error {
+	db, err := getDb(cfg)
+	if err != nil {
+		return err
+	}
+
+	bucketName := []byte(bucket)
+
+	return db.Update(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket(bucketName)
+	})
+}
+
+func getBuckets(cfg entity.Config) ([]string, error) {
+	var buckets []string
+
+	db, err := getDb(cfg)
+	if err != nil {
+		return buckets, err
+	}
+
+	err = db.View(func(tx *bolt.Tx) error {
+		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
+			buckets = append(buckets, string(name))
+			return nil
+		})
+	})
+	if err != nil {
+		return buckets, err
+	}
+
+	return buckets, nil
+}
