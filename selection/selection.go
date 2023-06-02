@@ -25,32 +25,42 @@ type choice struct {
 }
 
 type env struct {
-	GitRoot string
-	Id      string
-	Pwd     string
+	Id string
+}
+
+func (env) GitRoot() string {
+	gitOut, err := cmd.RunFormatError(cmd.Input{Command: gitTopLevelCmd})
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSpace(gitOut.Stdout)
+}
+
+func (env) Pwd() string {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	return pwd
 }
 
 func expandBucketTemplate(selector entity.Selector) (string, error) {
 	bucket := os.ExpandEnv(selector.Bucket)
+
+	// Primitive check to see if the bucket name is templated so that we can return early.
+	if !strings.Contains(bucket, "{{") {
+		return bucket, nil
+	}
 
 	tmpl, err := template.New("bucket").Parse(bucket)
 	if err != nil {
 		return "", err
 	}
 
-	pwd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	gitOut, err := cmd.RunFormatError(cmd.Input{Command: gitTopLevelCmd})
-	if err != nil {
-		return "", err
-	}
-	gitRoot := strings.TrimSpace(gitOut.Stdout)
-
 	out := bytes.Buffer{}
-	e := env{Pwd: pwd, GitRoot: gitRoot, Id: selector.Id}
+	e := env{Id: selector.Id}
 
 	err = tmpl.Execute(&out, e)
 	if err != nil {
@@ -113,7 +123,7 @@ func readdir(target string, settings entity.ActionSettings) ([]entity.Entry, err
 	target = mare.ExpandUser(target)
 	entries, err := os.ReadDir(target)
 	if err != nil {
-		return out, err
+		return out, fmt.Errorf("error reading contents of directory %s: %v", target, err)
 	}
 
 	for _, i := range entries {
