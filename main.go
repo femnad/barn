@@ -34,6 +34,12 @@ type purgeCmd struct {
 	Id string `arg:"positional,required"`
 }
 
+type truncateCmd struct {
+	commonArgs
+	Id    string   `arg:"-i,--id,required" help:"Selection ID"`
+	Entry []string `arg:"positional,required" help:"Keys to truncate"`
+}
+
 type chooseCmd struct {
 	commonArgs
 	DontReverse bool   `arg:"-r,--dont-reverse" help:"Don't reverse output when listing choices"`
@@ -42,10 +48,11 @@ type chooseCmd struct {
 }
 
 type args struct {
-	Choose *chooseCmd `arg:"subcommand:choose" help:"Make a selection based on given choices and update counts"`
-	List   *listCmd   `arg:"subcommand:list" help:"List existing buckets"`
-	Output *outputCmd `arg:"subcommand:output" help:"Show stored entries for the given selection ID"`
-	Purge  *purgeCmd  `arg:"subcommand:purge" help:"Purge given bucket"`
+	Choose   *chooseCmd   `arg:"subcommand:choose" help:"Make a selection based on given choices and update counts"`
+	List     *listCmd     `arg:"subcommand:list" help:"List existing buckets"`
+	Output   *outputCmd   `arg:"subcommand:output" help:"Show stored entries for the given selection ID"`
+	Purge    *purgeCmd    `arg:"subcommand:purge" help:"Purge given bucket"`
+	Truncate *truncateCmd `arg:"subcommand:truncate" help:"Truncate the desired keys for the given bucket"`
 }
 
 func (args) Version() string {
@@ -100,6 +107,13 @@ func doSelect(cmd *chooseCmd) {
 	markSelection(cmd.Config, cmd.Id, cmd.Selection)
 }
 
+func doTruncate(cmd *truncateCmd) {
+	err := selection.Truncate(cmd.Config, cmd.Id, cmd.Entry)
+	if err != nil {
+		log.Fatalf("error truncating keys from bucket %s: %v", cmd.Id, err)
+	}
+}
+
 func main() {
 	var parsed args
 	p := arg.MustParse(&parsed)
@@ -118,6 +132,8 @@ func main() {
 		doOutput(parsed.Output)
 	case parsed.Choose != nil:
 		doSelect(parsed.Choose)
+	case parsed.Truncate != nil:
+		doTruncate(parsed.Truncate)
 	default:
 		p.WriteHelp(os.Stderr)
 	}

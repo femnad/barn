@@ -230,3 +230,26 @@ func getBuckets(cfg entity.Config) ([]string, error) {
 
 	return buckets, nil
 }
+
+func truncateKeys(cfg entity.Config, bucket string, keys []string) error {
+	db, err := getDb(cfg)
+	if err != nil {
+		return err
+	}
+
+	return db.Batch(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			return fmt.Errorf("no bucket with name %s", bucket)
+		}
+
+		for _, key := range keys {
+			dErr := b.Delete([]byte(key))
+			if dErr != nil {
+				return fmt.Errorf("error deleting key %s from bucket %s: %v", key, bucket, dErr)
+			}
+		}
+
+		return nil
+	})
+}
