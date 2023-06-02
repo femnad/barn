@@ -14,14 +14,15 @@ import (
 
 func onSelectOutput(entry entity.Entry, selector entity.Selector, selection string) (string, error) {
 	var outStr string
+	settings := selector.Settings
 
-	if selector.OnSelect == "" {
+	if settings.OnSelect == "" {
 		return outStr, nil
 	}
 
 	ch := choice{Entry: entry, Selector: selector, Selection: selection}
 
-	tmpl, err := template.New("on-select").Parse(ch.OnSelect)
+	tmpl, err := template.New("on-select").Parse(settings.OnSelect)
 	if err != nil {
 		return outStr, err
 	}
@@ -33,7 +34,7 @@ func onSelectOutput(entry entity.Entry, selector entity.Selector, selection stri
 	}
 	outStr = mare.ExpandUser(out.String())
 
-	if selector.ExecOnSelect {
+	if settings.ExecOnSelect {
 		cmdOut, cErr := cmd.RunFormatError(cmd.Input{Command: outStr})
 		if cErr != nil {
 			return outStr, cErr
@@ -60,7 +61,7 @@ func Mark(configFile, id, selection string) (int, error) {
 	if bucket == "" {
 		bucket = id
 	}
-	exitCode = selector.ExitOnSelect
+	exitCode = selector.Settings.ExitOnSelect
 
 	entry, err := incrementEntryCount(cfg, bucket, selection)
 	if err != nil {
@@ -77,7 +78,7 @@ func Mark(configFile, id, selection string) (int, error) {
 	}
 
 	outStream := os.Stdout
-	if selector.StderrOutput {
+	if selector.Settings.StderrOutput {
 		outStream = os.Stderr
 	}
 
@@ -86,5 +87,5 @@ func Mark(configFile, id, selection string) (int, error) {
 		return exitCode, err
 	}
 
-	return selector.ExitOnSelect, nil
+	return exitCode, nil
 }

@@ -5,6 +5,15 @@ type Options struct {
 }
 
 type ActionSettings struct {
+	// Common to all actions
+	// On selection execute the resulting string instead of just printing it.
+	ExecOnSelect bool `yaml:"exec_on_select"`
+	// After printing the selection exit with this code.
+	ExitOnSelect int    `yaml:"exit_on_select"`
+	OnSelect     string `yaml:"on_select"`
+	// Write the selection to stderr.
+	StderrOutput bool `yaml:"stderr_output"`
+
 	// For readdir
 	IncludeParents int `yaml:"include_parents"`
 
@@ -20,18 +29,11 @@ type ActionSettings struct {
 
 type Selector struct {
 	Action string `yaml:"action"`
+	Id     string `yaml:"id"`
 	// To override Id as the bucket name.
-	Bucket string `yaml:"bucket"`
-	// On selection execute the resulting string instead of just printing it.
-	ExecOnSelect bool `yaml:"exec_on_select"`
-	// After printing the selection exit with this code.
-	ExitOnSelect int            `yaml:"exit_on_select"`
-	Id           string         `yaml:"id"`
-	OnSelect     string         `yaml:"on_select"`
-	Settings     ActionSettings `yaml:"settings"`
-	// Write the selection to stderr.
-	StderrOutput bool     `yaml:"stderr_output"`
-	Target       []string `yaml:"target"`
+	Bucket   string         `yaml:"bucket"`
+	Settings ActionSettings `yaml:"settings"`
+	Target   []string       `yaml:"target"`
 }
 
 type Config struct {
