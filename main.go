@@ -34,7 +34,7 @@ type purgeCmd struct {
 	Id string `arg:"positional,required"`
 }
 
-type selectCmd struct {
+type chooseCmd struct {
 	commonArgs
 	DontReverse bool   `arg:"-r,--dont-reverse" help:"Don't reverse output when listing choices"`
 	Id          string `arg:"-i,--id,required" help:"Selection ID"`
@@ -42,10 +42,10 @@ type selectCmd struct {
 }
 
 type args struct {
+	Choose *chooseCmd `arg:"subcommand:choose" help:"Make a selection based on given choices and update counts"`
 	List   *listCmd   `arg:"subcommand:list" help:"List existing buckets"`
 	Output *outputCmd `arg:"subcommand:output" help:"Show stored entries for the given selection ID"`
 	Purge  *purgeCmd  `arg:"subcommand:purge" help:"Purge given bucket"`
-	Select *selectCmd `arg:"subcommand:select" help:"Select based on given choices and update counts"`
 }
 
 func (args) Version() string {
@@ -91,7 +91,7 @@ func doPurge(cmd *purgeCmd) {
 	}
 }
 
-func doSelect(cmd *selectCmd) {
+func doSelect(cmd *chooseCmd) {
 	if cmd.Selection == "" {
 		showSelections(cmd.Config, cmd.Id, !cmd.DontReverse)
 		return
@@ -116,8 +116,8 @@ func main() {
 		doPurge(parsed.Purge)
 	case parsed.Output != nil:
 		doOutput(parsed.Output)
-	case parsed.Select != nil:
-		doSelect(parsed.Select)
+	case parsed.Choose != nil:
+		doSelect(parsed.Choose)
 	default:
 		p.WriteHelp(os.Stderr)
 	}
