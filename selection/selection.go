@@ -26,6 +26,7 @@ type choice struct {
 
 type env struct {
 	GitRoot string
+	Id      string
 	Pwd     string
 }
 
@@ -47,7 +48,7 @@ func expandBucketTemplate(selector entity.Selector) (string, error) {
 	gitRoot := strings.TrimSpace(gitOut.Stdout)
 
 	out := bytes.Buffer{}
-	e := env{Pwd: pwd, GitRoot: gitRoot}
+	e := env{Pwd: pwd, GitRoot: gitRoot, Id: selector.Id}
 
 	err = tmpl.Execute(&out, e)
 	if err != nil {
@@ -99,7 +100,7 @@ func buildEntry(line string, settings entity.ActionSettings) entity.Entry {
 
 	if settings.RemovePrefix != "" {
 		prefix := os.ExpandEnv(settings.RemovePrefix)
-		displayName = strings.TrimPrefix(displayName, prefix+"/")
+		displayName = strings.TrimPrefix(displayName, prefix)
 	}
 
 	if settings.RemoveSuffix != "" {
