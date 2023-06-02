@@ -56,12 +56,12 @@ func Mark(configFile, id, selection string) (int, error) {
 	if err != nil {
 		return exitCode, err
 	}
-
-	bucket := selector.Bucket
-	if bucket == "" {
-		bucket = id
-	}
 	exitCode = selector.Settings.ExitOnSelect
+
+	bucket, err := getBucket(id, selector)
+	if err != nil {
+		return exitCode, err
+	}
 
 	entry, err := incrementEntryCount(cfg, bucket, selection)
 	if err != nil {

@@ -1,22 +1,73 @@
 package selection
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"path"
 	"strings"
+	"text/template"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/femnad/barn/entity"
 	"github.com/femnad/mare"
+	"github.com/femnad/mare/cmd"
 )
+
+const gitTopLevelCmd = "git rev-parse --show-toplevel"
 
 type choice struct {
 	entity.Entry
 	entity.Selector
 	Selection string
+}
+
+type env struct {
+	GitRoot string
+	Pwd     string
+}
+
+func expandBucketTemplate(selector entity.Selector) (string, error) {
+	tmpl, err := template.New("bucket").Parse(selector.Bucket)
+	if err != nil {
+		return "", err
+	}
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	gitOut, err := cmd.RunFormatError(cmd.Input{Command: gitTopLevelCmd})
+	if err != nil {
+		return "", err
+	}
+	gitRoot := strings.TrimSpace(gitOut.Stdout)
+
+	out := bytes.Buffer{}
+	e := env{Pwd: pwd, GitRoot: gitRoot}
+
+	err = tmpl.Execute(&out, e)
+	if err != nil {
+		return "", err
+	}
+
+	return out.String(), nil
+}
+
+func getBucket(id string, selector entity.Selector) (string, error) {
+	bucket := selector.Bucket
+	if bucket == "" {
+		return id, nil
+	}
+
+	if strings.Contains(bucket, "{{") && strings.Contains(bucket, "}}") {
+		return expandBucketTemplate(selector)
+	}
+
+	return bucket, nil
 }
 
 func getDisplayName(entryName, targetPath string, includeParents int) string {
