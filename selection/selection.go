@@ -31,7 +31,9 @@ type env struct {
 }
 
 func expandBucketTemplate(selector entity.Selector) (string, error) {
-	tmpl, err := template.New("bucket").Parse(selector.Bucket)
+	bucket := os.ExpandEnv(selector.Bucket)
+
+	tmpl, err := template.New("bucket").Parse(bucket)
 	if err != nil {
 		return "", err
 	}
@@ -64,11 +66,7 @@ func getBucket(id string, selector entity.Selector) (string, error) {
 		return id, nil
 	}
 
-	if strings.Contains(bucket, "{{") && strings.Contains(bucket, "}}") {
-		return expandBucketTemplate(selector)
-	}
-
-	return bucket, nil
+	return expandBucketTemplate(selector)
 }
 
 func getDisplayName(entryName, targetPath string, includeParents int) string {

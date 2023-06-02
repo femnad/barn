@@ -14,7 +14,7 @@ import (
 
 const (
 	dbMode        = 0600
-	defaultDbPath = "~/.config/barn/barn.boltdb"
+	defaultDbPath = "~/.local/share/barn/barn.boltdb"
 )
 
 type selectionMap map[string]entity.Entry

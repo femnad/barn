@@ -22,7 +22,7 @@ The only selector here is one with the id `venv`. When you run `barn` with no ar
 if test (count $argv) -eq 1
     set vst $argv[1]
 else
-    barn choose -i venv | fzf +s | read vst
+    barn choose -i venv | fzf | read vst
     or return 1
 end
 
