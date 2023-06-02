@@ -63,7 +63,7 @@ func Mark(configFile, id, selection string) (int, error) {
 		return exitCode, err
 	}
 
-	entry, err := incrementEntryCount(cfg, bucket, selection, selector.Settings.Lazy)
+	entry, err := incrementEntryCount(cfg, bucket, selection, !selector.Settings.Eager)
 	if err != nil {
 		return exitCode, err
 	}

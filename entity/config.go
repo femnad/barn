@@ -6,13 +6,13 @@ type Options struct {
 
 type ActionSettings struct {
 	// Common to all actions
+	// Persist all the items in the action output.
+	Eager bool `yaml:"eager"`
 	// On selection execute the resulting string instead of just printing it.
 	ExecOnSelect bool `yaml:"exec_on_select"`
 	// After printing the selection exit with this code.
-	ExitOnSelect int `yaml:"exit_on_select"`
-	// Don't persist all the items in the selection output.
-	Lazy     bool   `yaml:"lazy"`
-	OnSelect string `yaml:"on_select"`
+	ExitOnSelect int    `yaml:"exit_on_select"`
+	OnSelect     string `yaml:"on_select"`
 	// Write the selection to stderr.
 	StderrOutput bool `yaml:"stderr_output"`
 

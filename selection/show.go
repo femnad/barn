@@ -27,25 +27,25 @@ func accumulate(selector entity.Selector) ([]entity.Entry, error) {
 	return output, nil
 }
 
-func getSelections(cfg entity.Config, bucket string, selections []entity.Entry, lazy bool) (selectionMap, error) {
-	if lazy {
-		storedSelections, err := getLazySelectionMap(cfg, bucket)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, entry := range selections {
-			// Check if there is persisted entry which could have a non-zero count.
-			_, ok := storedSelections[entry.DisplayName]
-			if !ok {
-				storedSelections[entry.DisplayName] = entry
-			}
-		}
-
-		return storedSelections, nil
+func getSelections(cfg entity.Config, bucket string, selections []entity.Entry, eager bool) (selectionMap, error) {
+	if eager {
+		return getSelectionMap(cfg, bucket, selections)
 	}
 
-	return getSelectionMap(cfg, bucket, selections)
+	storedSelections, err := getLazySelectionMap(cfg, bucket)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range selections {
+		// Check if there is persisted entry which could have a non-zero count.
+		_, ok := storedSelections[entry.DisplayName]
+		if !ok {
+			storedSelections[entry.DisplayName] = entry
+		}
+	}
+
+	return storedSelections, nil
 }
 
 func Show(configFile, id string, reverse bool) error {
@@ -69,7 +69,7 @@ func Show(configFile, id string, reverse bool) error {
 		return err
 	}
 
-	storedEntries, err := getSelections(cfg, bucket, selections, selector.Settings.Lazy)
+	storedEntries, err := getSelections(cfg, bucket, selections, selector.Settings.Eager)
 	if err != nil {
 		return err
 	}

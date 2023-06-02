@@ -60,7 +60,7 @@ func encodeEntry(entry entity.Entry) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
-func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx, lazy bool) (entity.Entry, error) {
+func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx, eager bool) (entity.Entry, error) {
 	var err error
 	var bck *bolt.Bucket
 	var value entity.Entry
@@ -69,7 +69,7 @@ func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx, lazy bool) (entity.E
 
 	bck = tx.Bucket(bucketName)
 	if bck == nil {
-		if !lazy {
+		if eager {
 			return value, fmt.Errorf("expected bucket %s to exists when incrementing entry for %s", bucket, key)
 		}
 		bck, err = tx.CreateBucket(bucketName)
@@ -80,7 +80,7 @@ func dbIncrementEntryCount(bucket, key string, tx *bolt.Tx, lazy bool) (entity.E
 
 	storedEntry := bck.Get(keyName)
 	if storedEntry == nil {
-		if !lazy {
+		if eager {
 			return value, fmt.Errorf("expected entry in bucket %s for %s to exists when incrementing", bucket, key)
 		}
 		// If this is a lazy initialization this key wasn't set based on the initial selection output so we can only set
