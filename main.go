@@ -25,7 +25,7 @@ type listCmd struct {
 
 type outputCmd struct {
 	commonArgs
-	Id             string `arg:"positional"`
+	Id             string `arg:"positional" help:"Selection Id"`
 	ShowZeroCounts bool   `arg:"-z,--zero" help:"Show entries with zero counts"`
 }
 
@@ -36,8 +36,9 @@ type purgeCmd struct {
 
 type selectCmd struct {
 	commonArgs
-	Id        string `arg:"-i,--id,required"`
-	Selection string `arg:"positional"`
+	DontReverse bool   `arg:"-r,--dont-reverse" help:"Don't reverse output when listing choices"`
+	Id          string `arg:"-i,--id,required" help:"Selection ID"`
+	Selection   string `arg:"positional" help:"choice to mark as selected"`
 }
 
 type args struct {
@@ -51,8 +52,8 @@ func (args) Version() string {
 	return fmt.Sprintf("%s %s", name, version)
 }
 
-func showSelections(config, id string) {
-	err := selection.Show(config, id)
+func showSelections(config, id string, reverse bool) {
+	err := selection.Show(config, id, reverse)
 	if err != nil {
 		log.Fatalf("error getting selections for id %s: %v", id, err)
 	}
@@ -92,7 +93,7 @@ func doPurge(cmd *purgeCmd) {
 
 func doSelect(cmd *selectCmd) {
 	if cmd.Selection == "" {
-		showSelections(cmd.Config, cmd.Id)
+		showSelections(cmd.Config, cmd.Id, !cmd.DontReverse)
 		return
 	}
 

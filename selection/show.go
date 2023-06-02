@@ -27,7 +27,7 @@ func accumulate(selector entity.Selector) ([]entity.Entry, error) {
 	return output, nil
 }
 
-func Show(configFile, id string) error {
+func Show(configFile, id string, reverse bool) error {
 	cfg, err := getConfig(configFile)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func Show(configFile, id string) error {
 		return err
 	}
 
-	sorted := sortEntries(storedEntries, true)
+	sorted := sortEntries(storedEntries, reverse)
 	for _, selection := range sorted {
 		fmt.Println(selection.value.DisplayName)
 	}

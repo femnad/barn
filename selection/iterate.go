@@ -2,12 +2,10 @@ package selection
 
 import (
 	"fmt"
+	"github.com/olekukonko/tablewriter"
+	"os"
+	"strconv"
 )
-
-func showEntry(p pair) {
-	k, v := p.key, p.value
-	fmt.Printf("Key: %s => Display Name: %s, Full Name: %s, Count: %d\n", k, v.DisplayName, v.FullName, v.Count)
-}
 
 func Iterate(configFile, id string, showZeroCounts bool) error {
 	cfg, err := getConfig(configFile)
@@ -22,7 +20,11 @@ func Iterate(configFile, id string, showZeroCounts bool) error {
 
 	var bucketIdx int
 	numBuckets := len(storedSelections)
+
 	for bucket, entryMap := range storedSelections {
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Display Name", "Full Name", "Count"})
+
 		var printedHeader bool
 		sorted := sortEntries(entryMap, true)
 		for _, entryPair := range sorted {
@@ -35,11 +37,14 @@ func Iterate(configFile, id string, showZeroCounts bool) error {
 				printedHeader = true
 			}
 
-			showEntry(entryPair)
+			table.Append([]string{entryPair.value.DisplayName, entryPair.value.FullName, strconv.FormatInt(entryPair.value.Count, 10)})
 		}
 
-		if printedHeader && bucketIdx < numBuckets-1 {
-			fmt.Println()
+		if printedHeader {
+			table.Render()
+			if bucketIdx < numBuckets-1 {
+				fmt.Println()
+			}
 		}
 		bucketIdx++
 	}
