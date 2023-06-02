@@ -159,7 +159,7 @@ func getConfig(file string) (entity.Config, error) {
 
 	err = yaml.Unmarshal(content, &cfg)
 	if err != nil {
-		return cfg, err
+		return cfg, fmt.Errorf("error unmarshalling config: %v", err)
 	}
 
 	return cfg, nil

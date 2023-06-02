@@ -76,7 +76,7 @@ func Show(configFile, id string, reverse bool) error {
 
 	sorted := sortEntries(storedEntries, reverse)
 	for _, selection := range sorted {
-		fmt.Println(selection.value.DisplayName)
+		fmt.Println(selection.DisplayName)
 	}
 
 	return nil

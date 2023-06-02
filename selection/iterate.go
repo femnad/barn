@@ -27,8 +27,8 @@ func Iterate(configFile, id string, showZeroCounts bool) error {
 
 		var printedHeader bool
 		sorted := sortEntries(entryMap, true)
-		for _, entryPair := range sorted {
-			if !showZeroCounts && entryPair.value.Count == 0 {
+		for _, entry := range sorted {
+			if !showZeroCounts && entry.Count == 0 {
 				continue
 			}
 
@@ -37,7 +37,8 @@ func Iterate(configFile, id string, showZeroCounts bool) error {
 				printedHeader = true
 			}
 
-			table.Append([]string{entryPair.value.DisplayName, entryPair.value.FullName, strconv.FormatInt(entryPair.value.Count, 10)})
+			count := strconv.FormatInt(entry.Count, 10)
+			table.Append([]string{entry.DisplayName, entry.FullName, count})
 		}
 
 		if printedHeader {

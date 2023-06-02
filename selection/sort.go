@@ -20,7 +20,7 @@ func less[T constraints.Ordered](i, j T, reverse bool) bool {
 	return i < j
 }
 
-func sortEntries(entries selectionMap, reverse bool) []pair {
+func sortEntries(entries selectionMap, reverse bool) []entity.Entry {
 	var pairs []pair
 	for k, v := range entries {
 		pairs = append(pairs, pair{key: k, value: v})
@@ -35,5 +35,10 @@ func sortEntries(entries selectionMap, reverse bool) []pair {
 		return less[int64](itemI.value.Count, itemJ.value.Count, reverse)
 	})
 
-	return pairs
+	var items []entity.Entry
+	for _, p := range pairs {
+		items = append(items, p.value)
+	}
+
+	return items
 }
