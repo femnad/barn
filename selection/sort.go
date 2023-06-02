@@ -21,19 +21,19 @@ func less[T constraints.Ordered](i, j T, reverse bool) bool {
 }
 
 func sortEntries(entries selectionMap, reverse bool) []pair {
-	var sorted []pair
+	var pairs []pair
 	for k, v := range entries {
-		sorted = append(sorted, pair{key: k, value: v})
+		pairs = append(pairs, pair{key: k, value: v})
 	}
 
-	sort.Slice(sorted, func(i, j int) bool {
-		itemI := sorted[i]
-		itemJ := sorted[j]
+	sort.Slice(pairs, func(i, j int) bool {
+		itemI := pairs[i]
+		itemJ := pairs[j]
 		if itemI.value.Count == itemJ.value.Count {
-			return less[string](itemJ.key, itemJ.key, reverse)
+			return less[string](itemI.key, itemJ.key, reverse)
 		}
 		return less[int64](itemI.value.Count, itemJ.value.Count, reverse)
 	})
 
-	return sorted
+	return pairs
 }
