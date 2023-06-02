@@ -31,7 +31,7 @@ type outputCmd struct {
 
 type purgeCmd struct {
 	commonArgs
-	Id string `arg:"positional,required"`
+	Ids []string `arg:"positional,required"`
 }
 
 type truncateCmd struct {
@@ -92,9 +92,9 @@ func doOutput(cmd *outputCmd) {
 }
 
 func doPurge(cmd *purgeCmd) {
-	err := selection.Purge(cmd.Config, cmd.Id)
+	err := selection.Purge(cmd.Config, cmd.Ids)
 	if err != nil {
-		log.Fatalf("error purging bucket %s: %v", cmd.Id, err)
+		log.Fatalf("error purging buckets: %v", err)
 	}
 }
 

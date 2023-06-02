@@ -197,16 +197,21 @@ func getStoredSelections(cfg entity.Config, bucket string) (bucketEntries, error
 	return bucketMap, err
 }
 
-func purgeBucket(cfg entity.Config, bucket string) error {
+func purgeBucket(cfg entity.Config, buckets []string) error {
 	db, err := getDb(cfg)
 	if err != nil {
 		return err
 	}
 
-	bucketName := []byte(bucket)
+	return db.Batch(func(tx *bolt.Tx) error {
+		for _, bucket := range buckets {
+			dErr := tx.DeleteBucket([]byte(bucket))
+			if dErr != nil {
+				return fmt.Errorf("error purging bucket %s: %v", bucket, dErr)
+			}
+		}
 
-	return db.Update(func(tx *bolt.Tx) error {
-		return tx.DeleteBucket(bucketName)
+		return nil
 	})
 }
 
