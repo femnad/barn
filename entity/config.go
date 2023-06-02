@@ -15,6 +15,8 @@ type ActionSettings struct {
 
 type Selector struct {
 	Action string `yaml:"action"`
+	// To override Id as the bucket name.
+	Bucket string `yaml:"bucket"`
 	// On selection execute the resulting string instead of just printing it.
 	ExecOnSelect bool           `yaml:"exec_on_select"`
 	Id           string         `yaml:"id"`

@@ -138,7 +138,7 @@ func dbEnsureEntry(bucket, key string, entry entity.Entry, tx *bolt.Tx) (entity.
 	return decodeEntry(storedEntry)
 }
 
-func getSelectionMap(cfg entity.Config, id string, entries []entity.Entry) (selectionMap, error) {
+func getSelectionMap(cfg entity.Config, bucket string, entries []entity.Entry) (selectionMap, error) {
 	countMap := make(selectionMap)
 
 	db, err := getDb(cfg)
@@ -148,7 +148,7 @@ func getSelectionMap(cfg entity.Config, id string, entries []entity.Entry) (sele
 
 	err = db.Batch(func(tx *bolt.Tx) error {
 		for _, entry := range entries {
-			value, eErr := dbEnsureEntry(id, entry.DisplayName, entry, tx)
+			value, eErr := dbEnsureEntry(bucket, entry.DisplayName, entry, tx)
 			if eErr != nil {
 				return eErr
 			}
@@ -160,7 +160,7 @@ func getSelectionMap(cfg entity.Config, id string, entries []entity.Entry) (sele
 	return countMap, err
 }
 
-func getStoredSelections(cfg entity.Config, id string) (bucketEntries, error) {
+func getStoredSelections(cfg entity.Config, bucket string) (bucketEntries, error) {
 	bucketMap := make(bucketEntries)
 
 	db, err := getDb(cfg)
@@ -171,7 +171,7 @@ func getStoredSelections(cfg entity.Config, id string) (bucketEntries, error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
 			bucketName := string(name)
-			if id != "" && bucketName != id {
+			if bucket != "" && bucketName != bucket {
 				return nil
 			}
 

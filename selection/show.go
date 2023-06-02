@@ -41,7 +41,12 @@ func Show(configFile, id string) error {
 		return err
 	}
 
-	storedEntries, err := getSelectionMap(cfg, id, selections)
+	bucket := selector.Bucket
+	if bucket == "" {
+		bucket = id
+	}
+
+	storedEntries, err := getSelectionMap(cfg, bucket, selections)
 	if err != nil {
 		return err
 	}

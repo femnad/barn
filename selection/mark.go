@@ -21,7 +21,12 @@ func Mark(configFile, id, selection string) error {
 		return err
 	}
 
-	entry, err := incrementEntryCount(cfg, id, selection)
+	bucket := selector.Bucket
+	if bucket == "" {
+		bucket = id
+	}
+
+	entry, err := incrementEntryCount(cfg, bucket, selection)
 	if err != nil {
 		return err
 	}
