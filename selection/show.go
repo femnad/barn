@@ -2,6 +2,7 @@ package selection
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/femnad/barn/entity"
 )
@@ -14,8 +15,9 @@ func accumulate(selector entity.Selector) ([]entity.Entry, error) {
 		return nil, err
 	}
 
-	for _, targetPath := range selector.Target {
-		selections, fErr := fn(targetPath, selector.Settings)
+	for _, target := range selector.Target {
+		target = os.ExpandEnv(target)
+		selections, fErr := fn(target, selector.Settings)
 		if fErr != nil {
 			return nil, fErr
 		}

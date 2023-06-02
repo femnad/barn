@@ -43,7 +43,22 @@ func getDisplayName(entryName, targetPath string, includeParents int) string {
 	return name
 }
 
-func readdir(target string, args entity.ActionSettings) ([]entity.Entry, error) {
+func buildEntry(line string, settings entity.ActionSettings) entity.Entry {
+	displayName := line
+
+	if settings.RemovePrefix != "" {
+		prefix := os.ExpandEnv(settings.RemovePrefix)
+		displayName = strings.TrimPrefix(displayName, prefix+"/")
+	}
+
+	if settings.RemoveSuffix != "" {
+		displayName = strings.TrimSuffix(displayName, settings.RemoveSuffix)
+	}
+
+	return entity.Entry{FullName: line, DisplayName: displayName}
+}
+
+func readdir(target string, settings entity.ActionSettings) ([]entity.Entry, error) {
 	var out []entity.Entry
 	target = mare.ExpandUser(target)
 	entries, err := os.ReadDir(target)
@@ -54,7 +69,7 @@ func readdir(target string, args entity.ActionSettings) ([]entity.Entry, error) 
 	for _, i := range entries {
 		name := i.Name()
 		fullPath := path.Join(target, name)
-		displayName := getDisplayName(name, fullPath, args.IncludeParents)
+		displayName := getDisplayName(name, fullPath, settings.IncludeParents)
 		e := entity.Entry{DisplayName: displayName, FullName: fullPath}
 		out = append(out, e)
 	}
@@ -64,10 +79,12 @@ func readdir(target string, args entity.ActionSettings) ([]entity.Entry, error) 
 
 func getActionFn(action string) (func(string, entity.ActionSettings) ([]entity.Entry, error), error) {
 	switch action {
-	case "readdir":
-		return readdir, nil
 	case "exec":
 		return execCmd, nil
+	case "readdir":
+		return readdir, nil
+	case "walkdir":
+		return walkdir, nil
 	default:
 		return nil, fmt.Errorf("no function found for %s", action)
 	}

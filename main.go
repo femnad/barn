@@ -49,9 +49,13 @@ func showSelections(config, id string) {
 }
 
 func markSelection(config, id, choice string) {
-	err := selection.Mark(config, id, choice)
+	exitCode, err := selection.Mark(config, id, choice)
 	if err != nil {
 		log.Fatalf("error marking selection as %s for id %s: %v", choice, id, err)
+	}
+
+	if exitCode != 0 {
+		os.Exit(exitCode)
 	}
 }
 
@@ -90,7 +94,8 @@ func main() {
 	p := arg.MustParse(&parsed)
 
 	if p.Subcommand() == nil {
-		p.Fail("missing subcommand, see -h output for usage")
+		p.WriteHelp(os.Stderr)
+		os.Exit(1)
 	}
 
 	switch {
