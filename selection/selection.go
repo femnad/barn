@@ -25,25 +25,29 @@ type choice struct {
 }
 
 type env struct {
-	Id string
+	bucket string
 }
 
-func (env) GitRoot() string {
+func (e env) GitRoot() (string, error) {
 	gitOut, err := cmd.RunFormatError(cmd.Input{Command: gitTopLevelCmd})
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return strings.TrimSpace(gitOut.Stdout)
+	return strings.TrimSpace(gitOut.Stdout), nil
 }
 
-func (env) Pwd() string {
+func (e env) Id() (string, error) {
+	return e.bucket, nil
+}
+
+func (e env) Pwd() (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return pwd
+	return pwd, nil
 }
 
 func expandBucketTemplate(selector entity.Selector) (string, error) {
@@ -60,7 +64,7 @@ func expandBucketTemplate(selector entity.Selector) (string, error) {
 	}
 
 	out := bytes.Buffer{}
-	e := env{Id: selector.Id}
+	e := env{bucket: selector.Id}
 
 	err = tmpl.Execute(&out, e)
 	if err != nil {
