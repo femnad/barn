@@ -19,7 +19,7 @@ type commonArgs struct {
 	Config string `arg:"-f,--file" default:"~/.config/barn/barn.yml" help:"Config file path"`
 }
 
-type listCmd struct {
+type bucketsCmd struct {
 	commonArgs
 }
 
@@ -48,8 +48,8 @@ type chooseCmd struct {
 }
 
 type args struct {
+	Buckets  *bucketsCmd  `arg:"subcommand:buckets" help:"List existing buckets"`
 	Choose   *chooseCmd   `arg:"subcommand:choose" help:"Make a selection based on given choices and update counts"`
-	List     *listCmd     `arg:"subcommand:list" help:"List existing buckets"`
 	Output   *outputCmd   `arg:"subcommand:output" help:"Show stored entries for the given selection ID"`
 	Purge    *purgeCmd    `arg:"subcommand:purge" help:"Purge given bucket"`
 	Truncate *truncateCmd `arg:"subcommand:truncate" help:"Truncate the desired keys for the given bucket"`
@@ -77,7 +77,7 @@ func markSelection(config, id, choice string) {
 	}
 }
 
-func doList(cmd *listCmd) {
+func doList(cmd *bucketsCmd) {
 	err := selection.ListBuckets(cmd.Config)
 	if err != nil {
 		log.Fatalf("error listing buckets: %v", err)
@@ -124,14 +124,14 @@ func main() {
 	}
 
 	switch {
-	case parsed.List != nil:
-		doList(parsed.List)
-	case parsed.Purge != nil:
-		doPurge(parsed.Purge)
-	case parsed.Output != nil:
-		doOutput(parsed.Output)
+	case parsed.Buckets != nil:
+		doList(parsed.Buckets)
 	case parsed.Choose != nil:
 		doSelect(parsed.Choose)
+	case parsed.Output != nil:
+		doOutput(parsed.Output)
+	case parsed.Purge != nil:
+		doPurge(parsed.Purge)
 	case parsed.Truncate != nil:
 		doTruncate(parsed.Truncate)
 	default:
