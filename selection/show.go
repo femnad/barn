@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	mapset "github.com/deckarep/golang-set/v2"
+
 	"github.com/femnad/barn/entity"
 )
 
@@ -32,7 +34,13 @@ func getSelections(cfg entity.Config, bucket string, selections []entity.Entry, 
 		return getSelectionMap(cfg, bucket, selections)
 	}
 
-	storedSelections, err := getLazySelectionMap(cfg, bucket)
+	var selectionList []string
+	for _, selection := range selections {
+		selectionList = append(selectionList, selection.DisplayName)
+	}
+	validSelections := mapset.NewSet[string](selectionList...)
+
+	storedSelections, err := getLazySelectionMap(cfg, bucket, validSelections)
 	if err != nil {
 		return nil, err
 	}

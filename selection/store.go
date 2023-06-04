@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/femnad/barn/entity"
@@ -173,7 +174,7 @@ func getSelectionMap(cfg entity.Config, bucket string, entries []entity.Entry) (
 }
 
 // getLazySelectionMap doesn't initialize an database entry for each choice.
-func getLazySelectionMap(cfg entity.Config, bucket string) (selectionMap, error) {
+func getLazySelectionMap(cfg entity.Config, bucket string, validSelections mapset.Set[string]) (selectionMap, error) {
 	countMap := make(selectionMap)
 
 	db, err := getDb(cfg)
@@ -181,17 +182,22 @@ func getLazySelectionMap(cfg entity.Config, bucket string) (selectionMap, error)
 		return countMap, err
 	}
 
-	err = db.View(func(tx *bolt.Tx) error {
+	err = db.Batch(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return nil
 		}
 		return b.ForEach(func(k, v []byte) error {
+			key := string(k)
+			if !validSelections.Contains(key) {
+				return b.Delete(k)
+			}
+
 			entry, dErr := decodeEntry(v)
 			if dErr != nil {
 				return dErr
 			}
-			countMap[string(k)] = entry
+			countMap[key] = entry
 			return nil
 		})
 	})
