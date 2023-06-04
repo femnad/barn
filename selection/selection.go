@@ -111,7 +111,7 @@ func buildEntry(line string, settings entity.ActionSettings) entity.Entry {
 	displayName := line
 
 	if settings.RemovePrefix != "" {
-		prefix := os.ExpandEnv(settings.RemovePrefix)
+		prefix := mare.ExpandUser(os.ExpandEnv(settings.RemovePrefix))
 		displayName = strings.TrimPrefix(displayName, prefix)
 	}
 

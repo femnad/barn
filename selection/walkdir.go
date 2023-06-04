@@ -8,7 +8,7 @@ import (
 )
 
 func maybeBuildEntry(path string, d fs.DirEntry, settings entity.ActionSettings) *entity.Entry {
-	if d.IsDir() {
+	if d != nil && d.IsDir() {
 		return nil
 	}
 
@@ -30,9 +30,6 @@ func walkdir(target string, settings entity.ActionSettings) ([]entity.Entry, err
 		}
 		return nil
 	})
-	if err != nil {
-		return entries, err
-	}
 
-	return entries, nil
+	return entries, err
 }

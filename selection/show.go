@@ -7,6 +7,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/femnad/barn/entity"
+	"github.com/femnad/mare"
 )
 
 func accumulate(selector entity.Selector) ([]entity.Entry, error) {
@@ -18,7 +19,7 @@ func accumulate(selector entity.Selector) ([]entity.Entry, error) {
 	}
 
 	for _, target := range selector.Target {
-		target = os.ExpandEnv(target)
+		target = mare.ExpandUser(os.ExpandEnv(target))
 		selections, fErr := fn(target, selector.Settings)
 		if fErr != nil {
 			return nil, fErr
