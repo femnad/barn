@@ -19,14 +19,18 @@ type commonArgs struct {
 	Config string `arg:"-f,--file" default:"~/.config/barn/barn.yml" help:"Config file path"`
 }
 
+type commonWithId struct {
+	commonArgs
+	Id string `arg:"positional" help:"Selection Id"`
+}
+
 type bucketsCmd struct {
 	commonArgs
 }
 
 type outputCmd struct {
-	commonArgs
-	Id             string `arg:"positional" help:"Selection Id"`
-	ShowZeroCounts bool   `arg:"-z,--zero" help:"Show entries with zero counts"`
+	commonWithId
+	ShowZeroCounts bool `arg:"-z,--zero" help:"Show entries with zero counts"`
 }
 
 type purgeCmd struct {
@@ -35,14 +39,12 @@ type purgeCmd struct {
 }
 
 type truncateCmd struct {
-	commonArgs
-	Id    string   `arg:"-i,--id,required" help:"Selection ID"`
-	Entry []string `arg:"positional,required" help:"Keys to truncate"`
+	commonWithId
+	Pattern []string `arg:"positional,required" help:"Pattern for keys to truncate"`
 }
 
 type chooseCmd struct {
-	commonArgs
-	Id        string `arg:"-i,--id,required" help:"Selection ID"`
+	commonWithId
 	Selection string `arg:"positional" help:"choice to mark as selected"`
 }
 
@@ -107,7 +109,7 @@ func doSelect(cmd *chooseCmd) {
 }
 
 func doTruncate(cmd *truncateCmd) {
-	err := selection.Truncate(cmd.Config, cmd.Id, cmd.Entry)
+	err := selection.Truncate(cmd.Config, cmd.Id, cmd.Pattern)
 	if err != nil {
 		log.Fatalf("error truncating keys from bucket %s: %v", cmd.Id, err)
 	}

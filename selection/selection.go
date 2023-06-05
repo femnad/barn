@@ -1,6 +1,7 @@
 package selection
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -141,10 +142,35 @@ func readdir(target string, settings entity.ActionSettings) ([]entity.Entry, err
 	return out, nil
 }
 
+func fileContent(target string, settings entity.ActionSettings) ([]entity.Entry, error) {
+	var out []entity.Entry
+	target = mare.ExpandUser(target)
+
+	file, err := os.Open(target)
+	if err != nil {
+		return out, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+
+		e := buildEntry(line, settings)
+		out = append(out, e)
+	}
+
+	return out, nil
+}
+
 func getActionFn(action string) (func(string, entity.ActionSettings) ([]entity.Entry, error), error) {
 	switch action {
 	case "exec":
 		return execCmd, nil
+	case "file":
+		return fileContent, nil
 	case "readdir":
 		return readdir, nil
 	case "walkdir":
