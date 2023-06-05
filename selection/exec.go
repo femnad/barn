@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/femnad/barn/entity"
+	marecmd "github.com/femnad/mare/cmd"
 )
 
-func execCmd(target string, args entity.ActionSettings) ([]entity.Entry, error) {
+func execCmd(target string, settings entity.ActionSettings) ([]entity.Entry, error) {
 	var entries []entity.Entry
 	if target == "" {
 		return entries, fmt.Errorf("given command is empty")
@@ -17,6 +18,14 @@ func execCmd(target string, args entity.ActionSettings) ([]entity.Entry, error) 
 
 	cmdSlice := strings.Split(target, " ")
 	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
+
+	if settings.SetPwdCmd != "" {
+		out, err := marecmd.RunFormatError(marecmd.Input{Command: settings.SetPwdCmd})
+		if err != nil {
+			return nil, err
+		}
+		cmd.Dir = strings.TrimSpace(out.Stdout)
+	}
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -32,7 +41,7 @@ func execCmd(target string, args entity.ActionSettings) ([]entity.Entry, error) 
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		entry := buildEntry(line, args)
+		entry := buildEntry(line, settings)
 		entries = append(entries, entry)
 	}
 
