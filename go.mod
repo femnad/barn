@@ -8,7 +8,6 @@ require (
 	github.com/femnad/mare v0.5.2
 	github.com/olekukonko/tablewriter v0.0.5
 	go.etcd.io/bbolt v1.3.7
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	gopkg.in/yaml.v3 v3.0.1
 )
 

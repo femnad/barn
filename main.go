@@ -42,9 +42,8 @@ type truncateCmd struct {
 
 type chooseCmd struct {
 	commonArgs
-	DontReverse bool   `arg:"-r,--dont-reverse" help:"Don't reverse output when listing choices"`
-	Id          string `arg:"-i,--id,required" help:"Selection ID"`
-	Selection   string `arg:"positional" help:"choice to mark as selected"`
+	Id        string `arg:"-i,--id,required" help:"Selection ID"`
+	Selection string `arg:"positional" help:"choice to mark as selected"`
 }
 
 type args struct {
@@ -59,8 +58,8 @@ func (args) Version() string {
 	return fmt.Sprintf("%s %s", name, version)
 }
 
-func showSelections(config, id string, reverse bool) {
-	err := selection.Show(config, id, reverse)
+func showSelections(config, id string) {
+	err := selection.Show(config, id)
 	if err != nil {
 		log.Fatalf("error getting selections for id %s: %v", id, err)
 	}
@@ -100,7 +99,7 @@ func doPurge(cmd *purgeCmd) {
 
 func doSelect(cmd *chooseCmd) {
 	if cmd.Selection == "" {
-		showSelections(cmd.Config, cmd.Id, !cmd.DontReverse)
+		showSelections(cmd.Config, cmd.Id)
 		return
 	}
 

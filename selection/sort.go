@@ -3,8 +3,6 @@ package selection
 import (
 	"sort"
 
-	"golang.org/x/exp/constraints"
-
 	"github.com/femnad/barn/entity"
 )
 
@@ -13,30 +11,40 @@ type pair struct {
 	value entity.Entry
 }
 
-func less[T constraints.Ordered](i, j T, reverse bool) bool {
-	if reverse {
-		return i > j
-	}
-	return i < j
-}
-
-func sortEntries(entries selectionMap, reverse bool) []entity.Entry {
-	var pairs []pair
-	for k, v := range entries {
-		pairs = append(pairs, pair{key: k, value: v})
-	}
-
+func sortPairs(pairs []pair) []pair {
 	sort.Slice(pairs, func(i, j int) bool {
 		itemI := pairs[i]
 		itemJ := pairs[j]
 		if itemI.value.Count == itemJ.value.Count {
-			return less[string](itemI.key, itemJ.key, reverse)
+			return itemI.key < itemJ.key
 		}
-		return less[int64](itemI.value.Count, itemJ.value.Count, reverse)
+
+		return itemI.value.Count < itemJ.value.Count
 	})
 
+	return pairs
+}
+
+func sortEntries(entries selectionMap) []entity.Entry {
+	var nonZeroCounts []pair
+	var zeroCounts []pair
+	var merged []pair
+
+	for k, v := range entries {
+		p := pair{key: k, value: v}
+		if v.Count > 0 {
+			nonZeroCounts = append(nonZeroCounts, p)
+		} else {
+			zeroCounts = append(zeroCounts, p)
+		}
+	}
+
+	nonZeroCounts = sortPairs(nonZeroCounts)
+	zeroCounts = sortPairs(zeroCounts)
+	merged = append(nonZeroCounts, zeroCounts...)
+
 	var items []entity.Entry
-	for _, p := range pairs {
+	for _, p := range merged {
 		items = append(items, p.value)
 	}
 

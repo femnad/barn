@@ -57,7 +57,7 @@ func getSelections(cfg entity.Config, bucket string, selections []entity.Entry, 
 	return storedSelections, nil
 }
 
-func Show(configFile, id string, reverse bool) error {
+func Show(configFile, id string) error {
 	cfg, err := getConfig(configFile)
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func Show(configFile, id string, reverse bool) error {
 		return err
 	}
 
-	sorted := sortEntries(storedEntries, reverse)
+	sorted := sortEntries(storedEntries)
 	for _, selection := range sorted {
 		fmt.Println(selection.DisplayName)
 	}

@@ -26,7 +26,7 @@ func Iterate(configFile, id string, showZeroCounts bool) error {
 		table.SetHeader([]string{"Display Name", "Full Name", "Count"})
 
 		var printedHeader bool
-		sorted := sortEntries(entryMap, true)
+		sorted := sortEntries(entryMap)
 		for _, entry := range sorted {
 			if !showZeroCounts && entry.Count == 0 {
 				continue
