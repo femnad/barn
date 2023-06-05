@@ -16,10 +16,12 @@ func sortPairs(pairs []pair) []pair {
 		itemI := pairs[i]
 		itemJ := pairs[j]
 		if itemI.value.Count == itemJ.value.Count {
+			// Ascending order by key if counts are equal.
 			return itemI.key < itemJ.key
 		}
 
-		return itemI.value.Count < itemJ.value.Count
+		// Descending order by count if counts are different.
+		return itemI.value.Count > itemJ.value.Count
 	})
 
 	return pairs
