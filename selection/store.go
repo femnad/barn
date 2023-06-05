@@ -7,6 +7,7 @@ import (
 	"path"
 
 	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/gobwas/glob"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/femnad/barn/entity"
@@ -204,7 +205,12 @@ func getLazySelectionMap(cfg entity.Config, bucket string, validSelections mapse
 
 	return countMap, err
 }
-func getStoredSelections(cfg entity.Config, bucket string) (bucketEntries, error) {
+
+func itemMatchesPattern(item, pattern string) bool {
+	return glob.MustCompile(pattern).Match(item)
+}
+
+func getStoredSelections(cfg entity.Config, pattern string) (bucketEntries, error) {
 	bucketMap := make(bucketEntries)
 
 	db, err := getDb(cfg)
@@ -214,8 +220,8 @@ func getStoredSelections(cfg entity.Config, bucket string) (bucketEntries, error
 
 	err = db.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-			bucketName := string(name)
-			if bucket != "" && bucketName != bucket {
+			bucket := string(name)
+			if pattern != "" && !itemMatchesPattern(bucket, pattern) {
 				return nil
 			}
 
@@ -233,7 +239,7 @@ func getStoredSelections(cfg entity.Config, bucket string) (bucketEntries, error
 				return err
 			}
 
-			bucketMap[bucketName] = bucketSelections
+			bucketMap[bucket] = bucketSelections
 			return nil
 		})
 	})
