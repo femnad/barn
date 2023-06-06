@@ -147,7 +147,9 @@ func fileContent(target string, settings entity.ActionSettings) ([]entity.Entry,
 	target = mare.ExpandUser(target)
 
 	file, err := os.Open(target)
-	if err != nil {
+	if os.IsNotExist(err) {
+		return out, nil
+	} else if err != nil {
 		return out, err
 	}
 
