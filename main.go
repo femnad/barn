@@ -21,7 +21,7 @@ type commonArgs struct {
 
 type commonWithId struct {
 	commonArgs
-	Id string `arg:"positional" help:"Selection Id"`
+	Id string `arg:"positional,required" help:"Selection Id"`
 }
 
 type bucketsCmd struct {
@@ -45,7 +45,8 @@ type truncateCmd struct {
 
 type chooseCmd struct {
 	commonWithId
-	Selection string `arg:"positional" help:"choice to mark as selected"`
+	ExtraArgs string `arg:"-e,--extra" help:"Extra arguments for the select action"`
+	Selection string `arg:"positional" help:"ID for selector action"`
 }
 
 type args struct {
@@ -60,8 +61,8 @@ func (args) Version() string {
 	return fmt.Sprintf("%s %s", name, version)
 }
 
-func showSelections(config, id string) {
-	err := selection.Show(config, id)
+func showSelections(config, id, extraArgs string) {
+	err := selection.Show(config, id, extraArgs)
 	if err != nil {
 		log.Fatalf("error getting selections for id %s: %v", id, err)
 	}
@@ -101,7 +102,7 @@ func doPurge(cmd *purgeCmd) {
 
 func doSelect(cmd *chooseCmd) {
 	if cmd.Selection == "" {
-		showSelections(cmd.Config, cmd.Id)
+		showSelections(cmd.Config, cmd.Id, cmd.ExtraArgs)
 		return
 	}
 

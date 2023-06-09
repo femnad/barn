@@ -10,7 +10,7 @@ import (
 	"github.com/femnad/mare"
 )
 
-func accumulate(selector entity.Selector) ([]entity.Entry, error) {
+func accumulate(selector entity.Selector, extraArgs string) ([]entity.Entry, error) {
 	var output []entity.Entry
 
 	fn, err := getActionFn(selector.Action)
@@ -20,6 +20,9 @@ func accumulate(selector entity.Selector) ([]entity.Entry, error) {
 
 	for _, target := range selector.Target {
 		target = mare.ExpandUser(os.ExpandEnv(target))
+		if extraArgs != "" {
+			target = fmt.Sprintf("%s %s", target, extraArgs)
+		}
 		selections, fErr := fn(target, selector.Settings)
 		if fErr != nil {
 			return nil, fErr
@@ -57,7 +60,7 @@ func getSelections(cfg entity.Config, bucket string, selections []entity.Entry, 
 	return storedSelections, nil
 }
 
-func Show(configFile, id string) error {
+func Show(configFile, id, extraArgs string) error {
 	cfg, err := getConfig(configFile)
 	if err != nil {
 		return err
@@ -68,7 +71,7 @@ func Show(configFile, id string) error {
 		return err
 	}
 
-	selections, err := accumulate(selector)
+	selections, err := accumulate(selector, extraArgs)
 	if err != nil {
 		return err
 	}
