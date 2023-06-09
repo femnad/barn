@@ -68,8 +68,8 @@ func showSelections(config, id, extraArgs string) {
 	}
 }
 
-func markSelection(config, id, choice string) {
-	exitCode, err := selection.Mark(config, id, choice)
+func markSelection(config, id, choice, extraArgs string) {
+	exitCode, err := selection.Mark(config, id, choice, extraArgs)
 	if err != nil {
 		log.Fatalf("error marking selection as %s for id %s: %v", choice, id, err)
 	}
@@ -106,7 +106,7 @@ func doSelect(cmd *chooseCmd) {
 		return
 	}
 
-	markSelection(cmd.Config, cmd.Id, cmd.Selection)
+	markSelection(cmd.Config, cmd.Id, cmd.Selection, cmd.ExtraArgs)
 }
 
 func doTruncate(cmd *truncateCmd) {

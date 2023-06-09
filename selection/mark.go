@@ -45,7 +45,7 @@ func onSelectOutput(entry entity.Entry, selector entity.Selector, selection stri
 	return outStr, nil
 }
 
-func Mark(configFile, id, selection string) (int, error) {
+func Mark(configFile, id, selection, extraArgs string) (int, error) {
 	var exitCode int
 	cfg, err := getConfig(configFile)
 	if err != nil {
@@ -58,7 +58,7 @@ func Mark(configFile, id, selection string) (int, error) {
 	}
 	exitCode = selector.Settings.ExitOnSelect
 
-	bucket, err := getBucket(id, selector)
+	bucket, err := getBucket(id, extraArgs, selector)
 	if err != nil {
 		return exitCode, err
 	}

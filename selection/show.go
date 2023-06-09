@@ -76,7 +76,7 @@ func Show(configFile, id, extraArgs string) error {
 		return err
 	}
 
-	bucket, err := getBucket(id, selector)
+	bucket, err := getBucket(id, extraArgs, selector)
 	if err != nil {
 		return err
 	}

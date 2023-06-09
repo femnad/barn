@@ -26,7 +26,16 @@ type choice struct {
 }
 
 type env struct {
-	bucket string
+	bucket    string
+	extraArgs string
+}
+
+func (e env) ExtraArgs() (string, error) {
+	if e.extraArgs == "" {
+		return "", nil
+	}
+
+	return "-" + e.extraArgs, nil
 }
 
 func (e env) GitRoot() (string, error) {
@@ -51,7 +60,7 @@ func (e env) Pwd() (string, error) {
 	return pwd, nil
 }
 
-func expandBucketTemplate(selector entity.Selector) (string, error) {
+func expandBucketTemplate(selector entity.Selector, extraArgs string) (string, error) {
 	bucket := os.ExpandEnv(selector.Bucket)
 
 	// Primitive check to see if the bucket name is templated so that we can return early.
@@ -65,7 +74,7 @@ func expandBucketTemplate(selector entity.Selector) (string, error) {
 	}
 
 	out := bytes.Buffer{}
-	e := env{bucket: selector.Id}
+	e := env{bucket: selector.Id, extraArgs: extraArgs}
 
 	err = tmpl.Execute(&out, e)
 	if err != nil {
@@ -75,13 +84,13 @@ func expandBucketTemplate(selector entity.Selector) (string, error) {
 	return out.String(), nil
 }
 
-func getBucket(id string, selector entity.Selector) (string, error) {
+func getBucket(id, extraArgs string, selector entity.Selector) (string, error) {
 	bucket := selector.Bucket
 	if bucket == "" {
 		return id, nil
 	}
 
-	return expandBucketTemplate(selector)
+	return expandBucketTemplate(selector, extraArgs)
 }
 
 func getDisplayName(entryName, targetPath string, includeParents int) string {
