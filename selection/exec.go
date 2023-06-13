@@ -2,9 +2,13 @@ package selection
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/anmitsu/go-shlex"
 
 	"github.com/femnad/barn/entity"
 	marecmd "github.com/femnad/mare/cmd"
@@ -16,13 +20,20 @@ func execCmd(target string, settings entity.ActionSettings) ([]entity.Entry, err
 		return entries, fmt.Errorf("given command is empty")
 	}
 
-	cmdSlice := strings.Split(target, " ")
+	cmdSlice, err := shlex.Split(target, true)
+	if err != nil {
+		return nil, err
+	}
+
 	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
 
+	stderr := bytes.Buffer{}
+	cmd.Stderr = &stderr
+
 	if settings.SetPwdCmd != "" {
-		out, err := marecmd.RunFormatError(marecmd.Input{Command: settings.SetPwdCmd})
-		if err != nil {
-			return nil, err
+		out, sErr := marecmd.RunFormatError(marecmd.Input{Command: settings.SetPwdCmd})
+		if sErr != nil {
+			return nil, sErr
 		}
 		cmd.Dir = strings.TrimSpace(out.Stdout)
 	}
@@ -46,7 +57,11 @@ func execCmd(target string, settings entity.ActionSettings) ([]entity.Entry, err
 	}
 
 	if err = cmd.Wait(); err != nil {
-		return entries, err
+		stderrContent, rErr := io.ReadAll(&stderr)
+		if rErr != nil {
+			return nil, fmt.Errorf("error reading stderr of command with error exit %s: %v", target, rErr)
+		}
+		return nil, fmt.Errorf("error running command %s, stderr: %s, error: %v", target, stderrContent, rErr)
 	}
 
 	return entries, nil

@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/alexflint/go-arg v1.4.3
+	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/femnad/mare v0.5.2
 	github.com/gobwas/glob v0.2.3
