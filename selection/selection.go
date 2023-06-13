@@ -180,6 +180,8 @@ func getActionFn(action string) (func(string, entity.ActionSettings) ([]entity.E
 	switch action {
 	case "exec":
 		return execCmd, nil
+	case "shell":
+		return shellCmd, nil
 	case "file":
 		return fileContent, nil
 	case "readdir":

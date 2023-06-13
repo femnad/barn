@@ -14,18 +14,31 @@ import (
 	marecmd "github.com/femnad/mare/cmd"
 )
 
-func execCmd(target string, settings entity.ActionSettings) ([]entity.Entry, error) {
+const defaultShell = "sh"
+
+func getCmd(command string, shell bool) (*exec.Cmd, error) {
+	if shell {
+		return exec.Command(defaultShell, "-c", command), nil
+	}
+
+	cmdSlice, err := shlex.Split(command, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return exec.Command(cmdSlice[0], cmdSlice[1:]...), nil
+}
+
+func runCmd(target string, settings entity.ActionSettings, shell bool) ([]entity.Entry, error) {
 	var entries []entity.Entry
 	if target == "" {
 		return entries, fmt.Errorf("given command is empty")
 	}
 
-	cmdSlice, err := shlex.Split(target, true)
+	cmd, err := getCmd(target, shell)
 	if err != nil {
 		return nil, err
 	}
-
-	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
 
 	stderr := bytes.Buffer{}
 	cmd.Stderr = &stderr
@@ -61,8 +74,16 @@ func execCmd(target string, settings entity.ActionSettings) ([]entity.Entry, err
 		if rErr != nil {
 			return nil, fmt.Errorf("error reading stderr of command with error exit %s: %v", target, rErr)
 		}
-		return nil, fmt.Errorf("error running command %s, stderr: %s, error: %v", target, stderrContent, rErr)
+		return nil, fmt.Errorf("error running command %s, stderr: %s, error: %v", target, stderrContent, err)
 	}
 
 	return entries, nil
+}
+
+func execCmd(target string, settings entity.ActionSettings) ([]entity.Entry, error) {
+	return runCmd(target, settings, false)
+}
+
+func shellCmd(target string, settings entity.ActionSettings) ([]entity.Entry, error) {
+	return runCmd(target, settings, true)
 }
