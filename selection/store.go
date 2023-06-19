@@ -253,15 +253,22 @@ func purgeBucket(cfg entity.Config, buckets []string) error {
 		return err
 	}
 
-	return db.Batch(func(tx *bolt.Tx) error {
-		for _, bucket := range buckets {
-			dErr := tx.DeleteBucket([]byte(bucket))
-			if dErr != nil {
-				return fmt.Errorf("error purging bucket %s: %v", bucket, dErr)
-			}
-		}
+	globs := mare.Map[string, glob.Glob](buckets, func(s string) glob.Glob {
+		return glob.MustCompile(s)
+	})
 
-		return nil
+	return db.Batch(func(tx *bolt.Tx) error {
+		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+			for _, bucketGlob := range globs {
+				if bucketGlob.Match(string(name)) {
+					dErr := tx.DeleteBucket(name)
+					if dErr != nil {
+						return fmt.Errorf("error purging bucket %s: %v", name, dErr)
+					}
+				}
+			}
+			return nil
+		})
 	})
 }
 
