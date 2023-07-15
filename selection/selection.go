@@ -136,7 +136,9 @@ func readdir(target string, settings entity.ActionSettings) ([]entity.Entry, err
 	var out []entity.Entry
 	target = mare.ExpandUser(target)
 	entries, err := os.ReadDir(target)
-	if err != nil {
+	if os.IsNotExist(err) {
+		return out, nil
+	} else if err != nil {
 		return out, fmt.Errorf("error reading contents of directory %s: %v", target, err)
 	}
 
