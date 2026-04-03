@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -132,20 +133,52 @@ func buildEntry(line string, settings entity.ActionSettings) entity.Entry {
 	return entity.Entry{FullName: line, DisplayName: displayName}
 }
 
+func readdirEntries(target string, depth int) ([]string, error) {
+	var entries []string
+	contents, err := os.ReadDir(target)
+	if err != nil {
+		return entries, err
+	}
+
+	parentParts := strings.Split(target, "/")
+	parent := parentParts[len(parentParts)-1]
+
+	for _, entry := range contents {
+		if !entry.IsDir() {
+			continue
+		}
+
+		if depth <= 0 {
+			return nil, fmt.Errorf("depth must be > 0")
+		}
+
+		if depth == 1 {
+			entries = append(entries, filepath.Join(parent, entry.Name()))
+		} else {
+			var childEntries []string
+			childEntries, err = readdirEntries(filepath.Join(target, entry.Name()), depth-1)
+			if err != nil {
+				return entries, err
+			}
+
+			entries = append(entries, childEntries...)
+		}
+	}
+
+	return entries, nil
+}
+
 func readdir(target string, settings entity.ActionSettings) ([]entity.Entry, error) {
 	var out []entity.Entry
 	target = mare.ExpandUser(target)
-	entries, err := os.ReadDir(target)
-	if os.IsNotExist(err) {
-		return out, nil
-	} else if err != nil {
-		return out, fmt.Errorf("error reading contents of directory %s: %v", target, err)
+	entries, err := readdirEntries(target, settings.Depth)
+	if err != nil {
+		return out, err
 	}
 
-	for _, i := range entries {
-		name := i.Name()
-		fullPath := path.Join(target, name)
-		displayName := getDisplayName(name, fullPath, settings.IncludeParents)
+	for _, entry := range entries {
+		fullPath := path.Join(target, entry)
+		displayName := getDisplayName(entry, fullPath, settings.IncludeParents)
 		e := entity.Entry{DisplayName: displayName, FullName: fullPath}
 		out = append(out, e)
 	}

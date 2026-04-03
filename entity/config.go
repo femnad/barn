@@ -27,6 +27,8 @@ type ActionSettings struct {
 	RemoveSuffix string `yaml:"remove_suffix"`
 
 	// For readdir
+	// Read down to <n> levels
+	Depth int `yaml:"depth"`
 	// Filter for files with given extension.
 	Extension string `yaml:"extension"`
 	// Include given number of parent dirs when persisting the selection.
